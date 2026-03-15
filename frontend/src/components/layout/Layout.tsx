@@ -1,41 +1,169 @@
 import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
-import { Menu, Bell } from 'lucide-react'
+import { Outlet, useLocation } from 'react-router-dom'
+import { Menu, Bell, Search, ChevronRight, LogOut } from 'lucide-react'
 import Sidebar from './Sidebar'
 import { useAuthStore } from '../../store/authStore'
 
+const routeLabels: Record<string, string> = {
+  '/': '仪表盘',
+  '/inventory': '库存管理',
+  '/sales': '销售管理',
+  '/purchase': '采购管理',
+  '/finance': '财务管理',
+  '/hr': '人力资源',
+}
+
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { user } = useAuthStore()
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const { user, signOut } = useAuthStore()
+  const location = useLocation()
+
+  const currentPath = '/' + (location.pathname.split('/')[1] || '')
+  const currentLabel = routeLabels[currentPath] || '页面'
+  const displayName = user?.email?.split('@')[0] || '用户'
+  const avatarChar = displayName[0]?.toUpperCase() || 'U'
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen overflow-hidden" style={{ background: '#f2f3f5' }}>
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Top bar */}
-        <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
-          <button
-            className="lg:hidden text-gray-500 hover:text-gray-700"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu size={22} />
-          </button>
-          <div className="hidden lg:block text-sm text-gray-500">
-            企业资源规划系统 (ERP)
-          </div>
+        <header
+          className="flex items-center justify-between flex-shrink-0 bg-white px-5"
+          style={{ height: 56, borderBottom: '1px solid #e5e6eb' }}
+        >
+          {/* Left: hamburger (mobile) + breadcrumb */}
           <div className="flex items-center gap-3">
-            <button className="text-gray-500 hover:text-gray-700 relative">
-              <Bell size={20} />
+            <button
+              className="lg:hidden flex items-center justify-center rounded-md transition-colors"
+              style={{ width: 32, height: 32, color: '#4E5969' }}
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={20} />
             </button>
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-              {user?.email?.[0]?.toUpperCase()}
+
+            {/* Breadcrumb */}
+            <div className="hidden lg:flex items-center gap-1.5" style={{ fontSize: 14 }}>
+              <span
+                className="cursor-default"
+                style={{ color: '#86909C' }}
+              >
+                首页
+              </span>
+              {currentPath !== '/' && (
+                <>
+                  <ChevronRight size={14} style={{ color: '#c9cdd4' }} />
+                  <span style={{ color: '#1D2129', fontWeight: 500 }}>
+                    {currentLabel}
+                  </span>
+                </>
+              )}
+              {currentPath === '/' && (
+                <>
+                  <ChevronRight size={14} style={{ color: '#c9cdd4' }} />
+                  <span style={{ color: '#1D2129', fontWeight: 500 }}>
+                    仪表盘
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Right: search, bell, user */}
+          <div className="flex items-center gap-1">
+            {/* Search */}
+            <button
+              className="flex items-center justify-center rounded-md transition-colors hover:bg-gray-100"
+              style={{ width: 36, height: 36, color: '#4E5969' }}
+            >
+              <Search size={18} />
+            </button>
+
+            {/* Notification bell */}
+            <button
+              className="flex items-center justify-center rounded-md transition-colors hover:bg-gray-100 relative"
+              style={{ width: 36, height: 36, color: '#4E5969' }}
+            >
+              <Bell size={18} />
+              {/* Red dot */}
+              <span
+                className="absolute rounded-full"
+                style={{
+                  width: 7,
+                  height: 7,
+                  background: '#F53F3F',
+                  top: 8,
+                  right: 8,
+                  border: '1.5px solid white',
+                }}
+              />
+            </button>
+
+            {/* Divider */}
+            <div
+              className="mx-2"
+              style={{ width: 1, height: 20, background: '#e5e6eb' }}
+            />
+
+            {/* User avatar + dropdown */}
+            <div className="relative">
+              <button
+                className="flex items-center gap-2 rounded-md px-2 transition-colors hover:bg-gray-100"
+                style={{ height: 36 }}
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                onBlur={() => setTimeout(() => setUserMenuOpen(false), 150)}
+              >
+                <div
+                  className="flex items-center justify-center rounded-full text-white font-medium"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    background: 'linear-gradient(135deg, #2B5AED 0%, #3C7EFF 100%)',
+                    fontSize: 12,
+                  }}
+                >
+                  {avatarChar}
+                </div>
+                <span
+                  className="hidden sm:inline"
+                  style={{ fontSize: 13, color: '#1D2129', fontWeight: 500 }}
+                >
+                  {displayName}
+                </span>
+              </button>
+
+              {/* Dropdown */}
+              {userMenuOpen && (
+                <div
+                  className="absolute right-0 mt-1 bg-white rounded-lg overflow-hidden"
+                  style={{
+                    width: 160,
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                    border: '1px solid #e5e6eb',
+                    zIndex: 50,
+                  }}
+                >
+                  <button
+                    className="flex items-center gap-2 w-full px-4 transition-colors hover:bg-gray-50"
+                    style={{ height: 40, fontSize: 13, color: '#4E5969' }}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      signOut()
+                    }}
+                  >
+                    <LogOut size={15} />
+                    退出登录
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>
 
-        {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        {/* Main content area */}
+        <main className="flex-1 overflow-y-auto" style={{ padding: 20 }}>
           <Outlet />
         </main>
       </div>

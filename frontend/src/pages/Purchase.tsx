@@ -250,25 +250,25 @@ export default function Purchase() {
     <div className="space-y-6">
       {/* Page header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-          <Truck className="text-orange-600" size={20} />
+        <div className="w-10 h-10 rounded-xl bg-[#FFF3E0] flex items-center justify-center">
+          <Truck className="text-[#FF7D00]" size={20} />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">采购管理</h1>
-          <p className="text-sm text-gray-500">管理采购订单与供应商信息</p>
+          <h1 className="text-2xl font-bold text-[#1D2129]">采购管理</h1>
+          <p className="text-sm text-[#86909C]">管理采购订单与供应商信息</p>
         </div>
       </div>
 
       {/* Error banner */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
+        <div className="bg-[#FEECEC] border border-[#FEECEC] text-[#F53F3F] px-4 py-3 rounded-lg text-sm flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 ml-4">✕</button>
+          <button onClick={() => setError(null)} className="text-[#F53F3F] hover:text-[#F53F3F] ml-4">✕</button>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-[#E5E6EB]">
         <nav className="flex gap-6">
           {(['orders', 'suppliers'] as const).map(t => (
             <button
@@ -276,8 +276,8 @@ export default function Purchase() {
               onClick={() => setTab(t)}
               className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
                 tab === t
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-[#2B5AED] text-[#FF7D00]'
+                  : 'border-transparent text-[#86909C] hover:text-[#4E5969]'
               }`}
             >
               {t === 'orders' ? '采购订单' : '供应商管理'}
@@ -291,57 +291,57 @@ export default function Purchase() {
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div className="relative flex-1 max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C9CDD4]" size={16} />
               <input
                 type="text"
                 placeholder="搜索供应商..."
                 value={supplierSearch}
                 onChange={e => setSupplierSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5E6EB] rounded-lg focus:ring-2 focus:ring-[#2B5AED] focus:border-[#2B5AED] outline-none"
               />
             </div>
             <button
               onClick={openNewSupplier}
-              className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 bg-[#2B5AED] hover:bg-[#1F4BD8] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
             >
               <Plus size={16} />
               新建供应商
             </button>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-[#E5E6EB] shadow-sm overflow-hidden">
             {loading ? (
-              <div className="p-8 text-center text-gray-400 text-sm">加载中...</div>
+              <div className="p-8 text-center text-[#C9CDD4] text-sm">加载中...</div>
             ) : filteredSuppliers.length === 0 ? (
-              <div className="p-8 text-center text-gray-400 text-sm">暂无供应商数据</div>
+              <div className="p-8 text-center text-[#C9CDD4] text-sm">暂无供应商数据</div>
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-[#F7F8FA] border-b border-[#E5E6EB]">
                   <tr>
                     {['编码', '名称', '邮箱', '电话', '账期（天）', '操作'].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-[#86909C] uppercase tracking-wide">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-[#F2F3F5]">
                   {filteredSuppliers.map(s => (
-                    <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-mono text-gray-600">{s.code}</td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{s.name}</td>
-                      <td className="px-4 py-3 text-gray-500">{s.email ?? '—'}</td>
-                      <td className="px-4 py-3 text-gray-500">{s.phone ?? '—'}</td>
-                      <td className="px-4 py-3 text-gray-500">{s.payment_terms}</td>
+                    <tr key={s.id} className="hover:bg-[#F7F8FA] transition-colors">
+                      <td className="px-4 py-3 font-mono text-[#4E5969]">{s.code}</td>
+                      <td className="px-4 py-3 font-medium text-[#1D2129]">{s.name}</td>
+                      <td className="px-4 py-3 text-[#86909C]">{s.email ?? '—'}</td>
+                      <td className="px-4 py-3 text-[#86909C]">{s.phone ?? '—'}</td>
+                      <td className="px-4 py-3 text-[#86909C]">{s.payment_terms}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => openEditSupplier(s)}
-                            className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                            className="text-xs text-[#2B5AED] hover:text-[#1F4BD8] font-medium px-2 py-1 rounded hover:bg-[#EDF1FE] transition-colors"
                           >
                             编辑
                           </button>
                           <button
                             onClick={() => handleDeleteSupplier(s.id)}
-                            className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
+                            className="text-[#F53F3F] hover:text-[#F53F3F] p-1 rounded hover:bg-[#FEECEC] transition-colors"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -361,54 +361,54 @@ export default function Purchase() {
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div className="relative flex-1 max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C9CDD4]" size={16} />
               <input
                 type="text"
                 placeholder="搜索订单号或供应商..."
                 value={orderSearch}
                 onChange={e => setOrderSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5E6EB] rounded-lg focus:ring-2 focus:ring-[#2B5AED] focus:border-[#2B5AED] outline-none"
               />
             </div>
             <button
               onClick={openNewOrder}
-              className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 bg-[#2B5AED] hover:bg-[#1F4BD8] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
             >
               <Plus size={16} />
               新建采购订单
             </button>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-[#E5E6EB] shadow-sm overflow-hidden">
             {loading ? (
-              <div className="p-8 text-center text-gray-400 text-sm">加载中...</div>
+              <div className="p-8 text-center text-[#C9CDD4] text-sm">加载中...</div>
             ) : filteredOrders.length === 0 ? (
-              <div className="p-8 text-center text-gray-400 text-sm">暂无采购订单数据</div>
+              <div className="p-8 text-center text-[#C9CDD4] text-sm">暂无采购订单数据</div>
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-[#F7F8FA] border-b border-[#E5E6EB]">
                   <tr>
                     {['订单号', '供应商', '订单日期', '预期到货', '状态', '合计', '操作'].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-[#86909C] uppercase tracking-wide">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-[#F2F3F5]">
                   {filteredOrders.map(o => (
-                    <tr key={o.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-mono text-gray-700">{o.order_number}</td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{o.supplier?.name ?? '—'}</td>
-                      <td className="px-4 py-3 text-gray-500">{o.order_date}</td>
-                      <td className="px-4 py-3 text-gray-500">{o.expected_date ?? '—'}</td>
+                    <tr key={o.id} className="hover:bg-[#F7F8FA] transition-colors">
+                      <td className="px-4 py-3 font-mono text-[#4E5969]">{o.order_number}</td>
+                      <td className="px-4 py-3 font-medium text-[#1D2129]">{o.supplier?.name ?? '—'}</td>
+                      <td className="px-4 py-3 text-[#86909C]">{o.order_date}</td>
+                      <td className="px-4 py-3 text-[#86909C]">{o.expected_date ?? '—'}</td>
                       <td className="px-4 py-3">
                         <Badge status={o.status} />
                       </td>
-                      <td className="px-4 py-3 font-semibold text-gray-900">{formatCurrency(o.total)}</td>
+                      <td className="px-4 py-3 font-semibold text-[#1D2129]">{formatCurrency(o.total)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => setViewOrder(o)}
-                            className="text-gray-500 hover:text-gray-700 p-1 rounded hover:bg-gray-100 transition-colors"
+                            className="text-[#86909C] hover:text-[#4E5969] p-1 rounded hover:bg-[#F7F8FA] transition-colors"
                             title="查看详情"
                           >
                             <Eye size={14} />
@@ -416,7 +416,7 @@ export default function Purchase() {
                           <select
                             value={o.status}
                             onChange={e => handleStatusChange(o.id, e.target.value as PurchaseOrder['status'])}
-                            className="text-xs border border-gray-200 rounded px-1.5 py-1 text-gray-600 focus:ring-1 focus:ring-orange-400 outline-none bg-white"
+                            className="text-xs border border-[#E5E6EB] rounded px-1.5 py-1 text-[#4E5969] focus:ring-1 focus:ring-[#2B5AED] outline-none bg-white"
                           >
                             <option value="draft">草稿</option>
                             <option value="sent">已发送</option>
@@ -425,7 +425,7 @@ export default function Purchase() {
                           </select>
                           <button
                             onClick={() => handleDeleteOrder(o.id)}
-                            className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
+                            className="text-[#F53F3F] hover:text-[#F53F3F] p-1 rounded hover:bg-[#FEECEC] transition-colors"
                             title="删除"
                           >
                             <Trash2 size={14} />
@@ -450,83 +450,83 @@ export default function Purchase() {
       >
         <div className="space-y-4">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2 rounded-lg">{error}</div>
+            <div className="bg-[#FEECEC] border border-[#FEECEC] text-[#F53F3F] text-sm px-3 py-2 rounded-lg">{error}</div>
           )}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">编码 <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-medium text-[#4E5969] mb-1">编码 <span className="text-[#F53F3F]">*</span></label>
               <input
                 type="text"
                 value={supplierForm.code}
                 onChange={e => setSupplierForm(f => ({ ...f, code: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full border border-[#E5E6EB] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2B5AED] focus:border-[#2B5AED] outline-none"
                 placeholder="SUP-001"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">名称 <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-medium text-[#4E5969] mb-1">名称 <span className="text-[#F53F3F]">*</span></label>
               <input
                 type="text"
                 value={supplierForm.name}
                 onChange={e => setSupplierForm(f => ({ ...f, name: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full border border-[#E5E6EB] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2B5AED] focus:border-[#2B5AED] outline-none"
                 placeholder="供应商名称"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">邮箱</label>
+              <label className="block text-xs font-medium text-[#4E5969] mb-1">邮箱</label>
               <input
                 type="email"
                 value={supplierForm.email}
                 onChange={e => setSupplierForm(f => ({ ...f, email: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full border border-[#E5E6EB] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2B5AED] focus:border-[#2B5AED] outline-none"
                 placeholder="email@example.com"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">电话</label>
+              <label className="block text-xs font-medium text-[#4E5969] mb-1">电话</label>
               <input
                 type="text"
                 value={supplierForm.phone}
                 onChange={e => setSupplierForm(f => ({ ...f, phone: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full border border-[#E5E6EB] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2B5AED] focus:border-[#2B5AED] outline-none"
                 placeholder="联系电话"
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">地址</label>
+            <label className="block text-xs font-medium text-[#4E5969] mb-1">地址</label>
             <input
               type="text"
               value={supplierForm.address}
               onChange={e => setSupplierForm(f => ({ ...f, address: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+              className="w-full border border-[#E5E6EB] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2B5AED] focus:border-[#2B5AED] outline-none"
               placeholder="供应商地址"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">账期（天）</label>
+            <label className="block text-xs font-medium text-[#4E5969] mb-1">账期（天）</label>
             <input
               type="number"
               min={0}
               value={supplierForm.payment_terms}
               onChange={e => setSupplierForm(f => ({ ...f, payment_terms: Number(e.target.value) }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+              className="w-full border border-[#E5E6EB] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2B5AED] focus:border-[#2B5AED] outline-none"
             />
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button
               onClick={() => { setSupplierModal(false); setError(null) }}
-              className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 text-sm text-[#4E5969] border border-[#E5E6EB] rounded-lg hover:bg-[#F7F8FA] transition-colors"
             >
               取消
             </button>
             <button
               onClick={handleSaveSupplier}
               disabled={saving}
-              className="px-4 py-2 text-sm text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm text-white bg-[#2B5AED] hover:bg-[#1F4BD8] disabled:opacity-50 rounded-lg transition-colors"
             >
               {saving ? '保存中...' : '保存'}
             </button>
@@ -543,15 +543,15 @@ export default function Purchase() {
       >
         <div className="space-y-5">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2 rounded-lg">{error}</div>
+            <div className="bg-[#FEECEC] border border-[#FEECEC] text-[#F53F3F] text-sm px-3 py-2 rounded-lg">{error}</div>
           )}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">供应商 <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-medium text-[#4E5969] mb-1">供应商 <span className="text-[#F53F3F]">*</span></label>
               <select
                 value={orderForm.supplier_id}
                 onChange={e => setOrderForm(f => ({ ...f, supplier_id: Number(e.target.value) }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-white"
+                className="w-full border border-[#E5E6EB] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2B5AED] focus:border-[#2B5AED] outline-none bg-white"
               >
                 <option value={0}>-- 选择供应商 --</option>
                 {suppliers.map(s => (
@@ -560,30 +560,30 @@ export default function Purchase() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">订单日期</label>
+              <label className="block text-xs font-medium text-[#4E5969] mb-1">订单日期</label>
               <input
                 type="date"
                 value={orderForm.order_date}
                 onChange={e => setOrderForm(f => ({ ...f, order_date: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full border border-[#E5E6EB] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2B5AED] focus:border-[#2B5AED] outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">预期到货日期</label>
+              <label className="block text-xs font-medium text-[#4E5969] mb-1">预期到货日期</label>
               <input
                 type="date"
                 value={orderForm.expected_date}
                 onChange={e => setOrderForm(f => ({ ...f, expected_date: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full border border-[#E5E6EB] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2B5AED] focus:border-[#2B5AED] outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">备注</label>
+              <label className="block text-xs font-medium text-[#4E5969] mb-1">备注</label>
               <input
                 type="text"
                 value={orderForm.notes}
                 onChange={e => setOrderForm(f => ({ ...f, notes: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full border border-[#E5E6EB] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#2B5AED] focus:border-[#2B5AED] outline-none"
                 placeholder="选填备注"
               />
             </div>
@@ -592,10 +592,10 @@ export default function Purchase() {
           {/* Items */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-semibold text-gray-800">商品明细</h4>
+              <h4 className="text-sm font-semibold text-[#1D2129]">商品明细</h4>
               <button
                 onClick={addOrderItem}
-                className="flex items-center gap-1.5 text-xs text-orange-600 border border-orange-300 hover:bg-orange-50 px-3 py-1.5 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 text-xs text-[#2B5AED] border border-[#E5E6EB] hover:bg-[#EDF1FE] px-3 py-1.5 rounded-lg transition-colors"
               >
                 <Plus size={13} />
                 添加商品
@@ -603,29 +603,29 @@ export default function Purchase() {
             </div>
 
             {orderForm.items.length === 0 ? (
-              <div className="border border-dashed border-gray-300 rounded-lg p-6 text-center text-sm text-gray-400">
+              <div className="border border-dashed border-[#E5E6EB] rounded-lg p-6 text-center text-sm text-[#C9CDD4]">
                 点击「添加商品」按钮添加采购商品
               </div>
             ) : (
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="border border-[#E5E6EB] rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-[#F7F8FA] border-b border-[#E5E6EB]">
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">商品</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 w-24">数量</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 w-28">单价</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 w-28">小计</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-[#86909C]">商品</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-[#86909C] w-24">数量</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-[#86909C] w-28">单价</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-[#86909C] w-28">小计</th>
                       <th className="px-3 py-2 w-8"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-[#F2F3F5]">
                     {orderForm.items.map((item, idx) => (
                       <tr key={idx} className="bg-white">
                         <td className="px-3 py-2">
                           <select
                             value={item.product_id}
                             onChange={e => updateOrderItem(idx, 'product_id', Number(e.target.value))}
-                            className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-orange-400 outline-none bg-white"
+                            className="w-full border border-[#E5E6EB] rounded px-2 py-1 text-xs focus:ring-1 focus:ring-[#2B5AED] outline-none bg-white"
                           >
                             {products.map(p => (
                               <option key={p.id} value={p.id}>{p.name}</option>
@@ -638,7 +638,7 @@ export default function Purchase() {
                             min={1}
                             value={item.quantity}
                             onChange={e => updateOrderItem(idx, 'quantity', Number(e.target.value))}
-                            className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-orange-400 outline-none"
+                            className="w-full border border-[#E5E6EB] rounded px-2 py-1 text-xs focus:ring-1 focus:ring-[#2B5AED] outline-none"
                           />
                         </td>
                         <td className="px-3 py-2">
@@ -648,16 +648,16 @@ export default function Purchase() {
                             step={0.01}
                             value={item.unit_price}
                             onChange={e => updateOrderItem(idx, 'unit_price', Number(e.target.value))}
-                            className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-orange-400 outline-none"
+                            className="w-full border border-[#E5E6EB] rounded px-2 py-1 text-xs focus:ring-1 focus:ring-[#2B5AED] outline-none"
                           />
                         </td>
-                        <td className="px-3 py-2 text-gray-700 font-medium">
+                        <td className="px-3 py-2 text-[#4E5969] font-medium">
                           {formatCurrency(item.quantity * item.unit_price)}
                         </td>
                         <td className="px-3 py-2">
                           <button
                             onClick={() => removeOrderItem(idx)}
-                            className="text-red-400 hover:text-red-600 transition-colors"
+                            className="text-[#F53F3F] hover:text-[#F53F3F] transition-colors"
                           >
                             <Trash2 size={13} />
                           </button>
@@ -673,12 +673,12 @@ export default function Purchase() {
           {/* Totals */}
           {orderForm.items.length > 0 && (
             <div className="flex justify-end">
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-w-[200px] space-y-2">
-                <div className="flex justify-between text-sm text-gray-600">
+              <div className="bg-[#F7F8FA] border border-[#E5E6EB] rounded-lg p-4 min-w-[200px] space-y-2">
+                <div className="flex justify-between text-sm text-[#4E5969]">
                   <span>小计</span>
                   <span>{formatCurrency(orderSubtotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm font-bold text-gray-900 border-t border-gray-200 pt-2">
+                <div className="flex justify-between text-sm font-bold text-[#1D2129] border-t border-[#E5E6EB] pt-2">
                   <span>合计</span>
                   <span>{formatCurrency(orderTotal)}</span>
                 </div>
@@ -689,14 +689,14 @@ export default function Purchase() {
           <div className="flex justify-end gap-3 pt-2">
             <button
               onClick={() => { setOrderModal(false); setError(null) }}
-              className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 text-sm text-[#4E5969] border border-[#E5E6EB] rounded-lg hover:bg-[#F7F8FA] transition-colors"
             >
               取消
             </button>
             <button
               onClick={handleSaveOrder}
               disabled={saving}
-              className="px-4 py-2 text-sm text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm text-white bg-[#2B5AED] hover:bg-[#1F4BD8] disabled:opacity-50 rounded-lg transition-colors"
             >
               {saving ? '保存中...' : '创建订单'}
             </button>
@@ -715,49 +715,49 @@ export default function Purchase() {
           <div className="space-y-5">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-500 text-xs">供应商</span>
-                <p className="font-medium text-gray-900 mt-0.5">{viewOrder.supplier?.name ?? '—'}</p>
+                <span className="text-[#86909C] text-xs">供应商</span>
+                <p className="font-medium text-[#1D2129] mt-0.5">{viewOrder.supplier?.name ?? '—'}</p>
               </div>
               <div>
-                <span className="text-gray-500 text-xs">状态</span>
+                <span className="text-[#86909C] text-xs">状态</span>
                 <p className="mt-0.5"><Badge status={viewOrder.status} /></p>
               </div>
               <div>
-                <span className="text-gray-500 text-xs">订单日期</span>
-                <p className="font-medium text-gray-900 mt-0.5">{viewOrder.order_date}</p>
+                <span className="text-[#86909C] text-xs">订单日期</span>
+                <p className="font-medium text-[#1D2129] mt-0.5">{viewOrder.order_date}</p>
               </div>
               <div>
-                <span className="text-gray-500 text-xs">预期到货</span>
-                <p className="font-medium text-gray-900 mt-0.5">{viewOrder.expected_date ?? '—'}</p>
+                <span className="text-[#86909C] text-xs">预期到货</span>
+                <p className="font-medium text-[#1D2129] mt-0.5">{viewOrder.expected_date ?? '—'}</p>
               </div>
               {viewOrder.notes && (
                 <div className="col-span-2">
-                  <span className="text-gray-500 text-xs">备注</span>
-                  <p className="font-medium text-gray-900 mt-0.5">{viewOrder.notes}</p>
+                  <span className="text-[#86909C] text-xs">备注</span>
+                  <p className="font-medium text-[#1D2129] mt-0.5">{viewOrder.notes}</p>
                 </div>
               )}
             </div>
 
             {viewOrder.items && viewOrder.items.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-800 mb-2">商品明细</h4>
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <h4 className="text-sm font-semibold text-[#1D2129] mb-2">商品明细</h4>
+                <div className="border border-[#E5E6EB] rounded-lg overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                    <thead className="bg-[#F7F8FA] border-b border-[#E5E6EB]">
                       <tr>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500">商品</th>
-                        <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500">数量</th>
-                        <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500">单价</th>
-                        <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500">小计</th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-[#86909C]">商品</th>
+                        <th className="px-4 py-2 text-right text-xs font-semibold text-[#86909C]">数量</th>
+                        <th className="px-4 py-2 text-right text-xs font-semibold text-[#86909C]">单价</th>
+                        <th className="px-4 py-2 text-right text-xs font-semibold text-[#86909C]">小计</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-[#F2F3F5]">
                       {viewOrder.items.map((item, i) => (
-                        <tr key={i} className="hover:bg-gray-50">
-                          <td className="px-4 py-2 text-gray-900">{item.product?.name ?? `商品#${item.product_id}`}</td>
-                          <td className="px-4 py-2 text-right text-gray-600">{item.quantity}</td>
-                          <td className="px-4 py-2 text-right text-gray-600">{formatCurrency(item.unit_price)}</td>
-                          <td className="px-4 py-2 text-right font-medium text-gray-900">{formatCurrency(item.total)}</td>
+                        <tr key={i} className="hover:bg-[#F7F8FA]">
+                          <td className="px-4 py-2 text-[#1D2129]">{item.product?.name ?? `商品#${item.product_id}`}</td>
+                          <td className="px-4 py-2 text-right text-[#4E5969]">{item.quantity}</td>
+                          <td className="px-4 py-2 text-right text-[#4E5969]">{formatCurrency(item.unit_price)}</td>
+                          <td className="px-4 py-2 text-right font-medium text-[#1D2129]">{formatCurrency(item.total)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -767,18 +767,18 @@ export default function Purchase() {
             )}
 
             <div className="flex justify-end">
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-w-[200px] space-y-2">
-                <div className="flex justify-between text-sm text-gray-600">
+              <div className="bg-[#F7F8FA] border border-[#E5E6EB] rounded-lg p-4 min-w-[200px] space-y-2">
+                <div className="flex justify-between text-sm text-[#4E5969]">
                   <span>小计</span>
                   <span>{formatCurrency(viewOrder.subtotal)}</span>
                 </div>
                 {viewOrder.tax > 0 && (
-                  <div className="flex justify-between text-sm text-gray-600">
+                  <div className="flex justify-between text-sm text-[#4E5969]">
                     <span>税费</span>
                     <span>{formatCurrency(viewOrder.tax)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm font-bold text-gray-900 border-t border-gray-200 pt-2">
+                <div className="flex justify-between text-sm font-bold text-[#1D2129] border-t border-[#E5E6EB] pt-2">
                   <span>合计</span>
                   <span>{formatCurrency(viewOrder.total)}</span>
                 </div>
@@ -788,7 +788,7 @@ export default function Purchase() {
             <div className="flex justify-end">
               <button
                 onClick={() => setViewOrder(null)}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm text-[#4E5969] border border-[#E5E6EB] rounded-lg hover:bg-[#F7F8FA] transition-colors"
               >
                 关闭
               </button>

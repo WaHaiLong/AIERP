@@ -31,8 +31,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: DEMO_USER })
       return
     }
-    // Try Supabase
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    // Try Supabase (with timeout)
+    const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('登录超时，请使用演示账号登录')), 5000))
+    const authPromise = supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await Promise.race([authPromise, timeout])
     if (error) throw error
     const u = data.user
     set({ user: { id: u.id, email: u.email!, full_name: u.user_metadata?.full_name, role: u.user_metadata?.role || 'staff' } })
@@ -66,13 +68,19 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
       localStorage.removeItem('erp_demo_user')
     }
-    // Check Supabase session
-    const { data } = await supabase.auth.getSession()
-    if (data.session?.user) {
-      const u = data.session.user
-      set({ user: { id: u.id, email: u.email!, full_name: u.user_metadata?.full_name, role: u.user_metadata?.role || 'staff' }, loading: false })
-    } else {
-      set({ loading: false })
+    // Check Supabase session (with timeout to avoid hanging)
+    try {
+      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000))
+      const sessionPromise = supabase.auth.getSession()
+      const result = await Promise.race([sessionPromise, timeout])
+      if (result && 'data' in result && result.data.session?.user) {
+        const u = result.data.session.user
+        set({ user: { id: u.id, email: u.email!, full_name: u.user_metadata?.full_name, role: u.user_metadata?.role || 'staff' }, loading: false })
+        return
+      }
+    } catch {
+      // Supabase session check failed, continue to login page
     }
+    set({ loading: false })
   },
 }))

@@ -58,8 +58,8 @@ export default function HR() {
     setEmpLoading(true)
     try {
       setEmployees(await getEmployees())
-    } catch (e: any) {
-      setEmpError(e.message)
+    } catch (e: unknown) {
+      setEmpError(e instanceof Error ? e.message : '操作失败')
     } finally {
       setEmpLoading(false)
     }
@@ -69,8 +69,8 @@ export default function HR() {
     setDeptLoading(true)
     try {
       setDepartments(await getDepartments())
-    } catch (e: any) {
-      setDeptError(e.message)
+    } catch (e: unknown) {
+      setDeptError(e instanceof Error ? e.message : '操作失败')
     } finally {
       setDeptLoading(false)
     }
@@ -118,8 +118,8 @@ export default function HR() {
       }
       setEmpModalOpen(false)
       await loadEmployees()
-    } catch (e: any) {
-      setEmpError(e.message)
+    } catch (e: unknown) {
+      setEmpError(e instanceof Error ? e.message : '操作失败')
     } finally {
       setEmpSaving(false)
     }
@@ -130,8 +130,8 @@ export default function HR() {
     try {
       await deleteEmployee(id)
       await loadEmployees()
-    } catch (e: any) {
-      alert(e.message)
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : '操作失败')
     }
   }
 
@@ -149,8 +149,8 @@ export default function HR() {
       await createDepartment(deptForm)
       setDeptModalOpen(false)
       await loadDepartments()
-    } catch (e: any) {
-      setDeptError(e.message)
+    } catch (e: unknown) {
+      setDeptError(e instanceof Error ? e.message : '操作失败')
     } finally {
       setDeptSaving(false)
     }
@@ -161,8 +161,8 @@ export default function HR() {
     try {
       await deleteDepartment(id)
       await loadDepartments()
-    } catch (e: any) {
-      alert(e.message)
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : '操作失败')
     }
   }
 

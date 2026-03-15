@@ -115,13 +115,14 @@ export const createSalesOrder = async (
   return ord as SalesOrder
 }
 
-export const updateSalesOrderStatus = async (id: number, status: string) => {
+export const updateSalesOrderStatus = async (id: number, status: SalesOrder['status']) => {
   const { error } = await supabase.from('sales_orders').update({ status }).eq('id', id)
   if (error) throw error
 }
 
 export const deleteSalesOrder = async (id: number) => {
-  await supabase.from('sales_order_items').delete().eq('order_id', id)
+  const { error: itemErr } = await supabase.from('sales_order_items').delete().eq('order_id', id)
+  if (itemErr) throw itemErr
   const { error } = await supabase.from('sales_orders').delete().eq('id', id)
   if (error) throw error
 }
@@ -177,13 +178,14 @@ export const createPurchaseOrder = async (
   return ord as PurchaseOrder
 }
 
-export const updatePurchaseOrderStatus = async (id: number, status: string) => {
+export const updatePurchaseOrderStatus = async (id: number, status: PurchaseOrder['status']) => {
   const { error } = await supabase.from('purchase_orders').update({ status }).eq('id', id)
   if (error) throw error
 }
 
 export const deletePurchaseOrder = async (id: number) => {
-  await supabase.from('purchase_order_items').delete().eq('order_id', id)
+  const { error: itemErr } = await supabase.from('purchase_order_items').delete().eq('order_id', id)
+  if (itemErr) throw itemErr
   const { error } = await supabase.from('purchase_orders').delete().eq('id', id)
   if (error) throw error
 }
@@ -221,7 +223,8 @@ export const createPayment = async (d: Omit<Payment, 'id' | 'created_at'>) => {
   if (inv) {
     const newPaid = inv.paid_amount + d.amount
     const status = newPaid >= inv.amount ? 'paid' : 'partial'
-    await supabase.from('invoices').update({ paid_amount: newPaid, status }).eq('id', d.invoice_id)
+    const { error: updErr } = await supabase.from('invoices').update({ paid_amount: newPaid, status }).eq('id', d.invoice_id)
+    if (updErr) throw updErr
   }
   return payment as Payment
 }
@@ -273,7 +276,7 @@ export const deleteEmployee = async (id: number) => {
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   const [
     { count: totalProducts },
-    { data: lowStock },
+    { data: allProductsData },
     { count: totalCustomers },
     { count: totalSuppliers },
     { data: salesOrders },
@@ -282,7 +285,7 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     { count: totalEmployees },
   ] = await Promise.all([
     supabase.from('products').select('*', { count: 'exact', head: true }),
-    supabase.from('products').select('id').lt('stock_quantity', supabase.from('products').select('min_stock')),
+    supabase.from('products').select('id, stock_quantity, min_stock'),
     supabase.from('customers').select('*', { count: 'exact', head: true }),
     supabase.from('suppliers').select('*', { count: 'exact', head: true }),
     supabase.from('sales_orders').select('total, status'),
@@ -291,12 +294,13 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     supabase.from('employees').select('*', { count: 'exact', head: true }),
   ])
 
+  const lowStockProducts = allProductsData?.filter(p => p.stock_quantity < p.min_stock).length ?? 0
   const salesTotalAmount = salesOrders?.reduce((s, o) => s + (o.total || 0), 0) ?? 0
   const unpaidInvoices = invoices?.filter(i => i.status !== 'paid').reduce((s, i) => s + (i.amount - i.paid_amount), 0) ?? 0
 
   return {
     totalProducts: totalProducts ?? 0,
-    lowStockProducts: lowStock?.length ?? 0,
+    lowStockProducts,
     totalCustomers: totalCustomers ?? 0,
     totalSuppliers: totalSuppliers ?? 0,
     salesOrdersCount: salesOrders?.length ?? 0,

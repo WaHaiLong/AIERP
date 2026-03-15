@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Building2, Mail, Lock, LogIn, Loader2 } from 'lucide-react'
+import { Building2, Mail, Lock, Loader2, Shield, Users, BarChart3 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 
 export default function Login() {
@@ -7,6 +7,7 @@ export default function Login() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [remember, setRemember] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -28,117 +29,199 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 flex items-center justify-center p-4">
-      {/* Background decorative circles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-white/5 rounded-full" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-white/5 rounded-full" />
-        <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-white/5 rounded-full" />
-      </div>
-
-      <div className="relative w-full max-w-md">
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 pt-10 pb-8 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm mb-4">
-              <Building2 size={32} className="text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-white leading-tight">AI-ERP</h1>
-            <p className="text-blue-100 text-sm mt-1 tracking-wide">企业资源规划系统</p>
-          </div>
-
-          {/* Form */}
-          <div className="px-8 py-8">
-            <p className="text-center text-gray-500 text-sm mb-6">请登录您的账户以继续</p>
-
-            {error && (
-              <div className="mb-5 flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
-                <span className="mt-0.5 shrink-0">⚠</span>
-                <span>{error}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Email */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
-                  电子邮箱
-                </label>
-                <div className="relative">
-                  <Mail
-                    size={16}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                  />
-                  <input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="请输入电子邮箱"
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
-                  登录密码
-                </label>
-                <div className="relative">
-                  <Lock
-                    size={16}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                  />
-                  <input
-                    id="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="请输入登录密码"
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  />
-                </div>
-              </div>
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-blue-400 disabled:to-indigo-400 text-white font-semibold py-2.5 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:cursor-not-allowed mt-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>登录中...</span>
-                  </>
-                ) : (
-                  <>
-                    <LogIn size={16} />
-                    <span>登 录</span>
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Demo hint */}
-            <div className="mt-6 bg-gray-50 border border-dashed border-gray-200 rounded-lg px-4 py-3 text-center">
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">演示账号</p>
-              <p className="text-xs text-gray-500 font-mono">
-                demo@example.com&nbsp;/&nbsp;demo123456
-              </p>
-            </div>
-          </div>
+    <div className="min-h-screen flex">
+      {/* ====== Left Brand Panel (hidden on mobile) ====== */}
+      <div
+        className="hidden lg:flex lg:w-[60%] relative overflow-hidden flex-col justify-between p-12 text-white"
+        style={{ background: 'linear-gradient(135deg, #2B5AED 0%, #1a47d1 100%)' }}
+      >
+        {/* Decorative circles */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-white/5" />
+          <div className="absolute top-1/3 right-[-120px] w-[400px] h-[400px] rounded-full bg-white/5" />
+          <div className="absolute bottom-[-80px] left-1/4 w-[350px] h-[350px] rounded-full bg-white/5" />
+          <div className="absolute top-[15%] left-[55%] w-[200px] h-[200px] rounded-full bg-white/[0.03]" />
+          {/* Grid dots overlay */}
+          <div
+            className="absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
+              backgroundSize: '30px 30px',
+            }}
+          />
         </div>
 
-        <p className="text-center text-blue-200 text-xs mt-6">
-          &copy; {new Date().getFullYear()} AI-ERP 企业资源规划系统
-        </p>
+        {/* Main content */}
+        <div className="relative z-10 flex-1 flex flex-col justify-center max-w-lg">
+          <h1 className="text-4xl xl:text-5xl font-bold leading-tight tracking-wide">
+            智能云端
+            <br />
+            赋能企业
+          </h1>
+          <p className="mt-5 text-lg text-blue-100 leading-relaxed">
+            新一代智能企业资源规划平台，以 AI 驱动业务决策，
+            <br className="hidden xl:block" />
+            助力企业实现数字化转型与高效管理。
+          </p>
+        </div>
+
+        {/* Bottom feature icons */}
+        <div className="relative z-10 flex gap-10 pt-8 border-t border-white/15">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+              <Shield size={20} />
+            </div>
+            <span className="text-sm text-blue-100">安全可靠</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+              <Users size={20} />
+            </div>
+            <span className="text-sm text-blue-100">高效协同</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+              <BarChart3 size={20} />
+            </div>
+            <span className="text-sm text-blue-100">智能分析</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ====== Right Login Form Panel ====== */}
+      <div className="w-full lg:w-[40%] bg-white flex items-center justify-center p-6 sm:p-10">
+        <div className="w-full max-w-sm">
+          {/* Logo + Brand */}
+          <div className="flex items-center gap-3 mb-10">
+            <div
+              className="w-10 h-10 rounded-lg flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #2B5AED, #1a47d1)' }}
+            >
+              <Building2 size={22} className="text-white" />
+            </div>
+            <span className="text-xl font-bold text-gray-800 tracking-wide">AI-ERP</span>
+          </div>
+
+          {/* Welcome title */}
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">欢迎登录</h2>
+          <p className="text-sm text-gray-400 mb-8">请输入您的账号信息以继续</p>
+
+          {/* Error message */}
+          {error && (
+            <div className="mb-5 flex items-start gap-2 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3">
+              <span className="mt-0.5 shrink-0">!</span>
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                电子邮箱
+              </label>
+              <div className="relative">
+                <Mail
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                />
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="请输入电子邮箱"
+                  className="w-full h-[44px] pl-10 pr-4 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 outline-none transition-all duration-200 focus:border-[#2B5AED] focus:shadow-[0_0_0_3px_rgba(43,90,237,0.1)]"
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+                登录密码
+              </label>
+              <div className="relative">
+                <Lock
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                />
+                <input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="请输入登录密码"
+                  className="w-full h-[44px] pl-10 pr-4 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 outline-none transition-all duration-200 focus:border-[#2B5AED] focus:shadow-[0_0_0_3px_rgba(43,90,237,0.1)]"
+                />
+              </div>
+            </div>
+
+            {/* Remember me + Forgot password */}
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-[#2B5AED] focus:ring-[#2B5AED] cursor-pointer"
+                />
+                <span className="text-sm text-gray-600">记住我</span>
+              </label>
+              <a
+                href="#forgot"
+                onClick={(e) => e.preventDefault()}
+                className="text-sm text-[#2B5AED] hover:text-[#1a47d1] transition-colors"
+              >
+                忘记密码?
+              </a>
+            </div>
+
+            {/* Submit button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full h-[44px] flex items-center justify-center gap-2 rounded-lg text-white font-semibold text-sm transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{
+                background: loading ? '#6b8de8' : '#2B5AED',
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) (e.currentTarget.style.background = '#1a47d1')
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) (e.currentTarget.style.background = '#2B5AED')
+              }}
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  <span>登录中...</span>
+                </>
+              ) : (
+                <span>登 录</span>
+              )}
+            </button>
+          </form>
+
+          {/* Demo account hint */}
+          <div className="mt-8 text-center">
+            <p className="text-xs text-gray-400">
+              演示账号：
+              <span className="text-gray-500 font-mono">demo@example.com</span>
+              {' / '}
+              <span className="text-gray-500 font-mono">demo123456</span>
+            </p>
+          </div>
+
+          {/* Footer */}
+          <p className="text-center text-gray-300 text-xs mt-10">
+            &copy; {new Date().getFullYear()} AI-ERP 企业资源规划系统
+          </p>
+        </div>
       </div>
     </div>
   )

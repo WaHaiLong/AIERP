@@ -1,18 +1,18 @@
 const colors: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-700',
-  confirmed: 'bg-blue-100 text-blue-700',
-  shipped: 'bg-yellow-100 text-yellow-700',
-  delivered: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
-  sent: 'bg-blue-100 text-blue-700',
-  received: 'bg-green-100 text-green-700',
-  paid: 'bg-green-100 text-green-700',
-  partial: 'bg-yellow-100 text-yellow-700',
-  unpaid: 'bg-red-100 text-red-700',
-  overdue: 'bg-red-100 text-red-700',
-  active: 'bg-green-100 text-green-700',
-  inactive: 'bg-gray-100 text-gray-700',
-  terminated: 'bg-red-100 text-red-700',
+  draft: 'bg-[#f2f3f5] text-[#86909C]',
+  confirmed: 'bg-[#e8f3ff] text-[#2B5AED]',
+  shipped: 'bg-[#fff7e8] text-[#FF7D00]',
+  delivered: 'bg-[#e8ffea] text-[#00B42A]',
+  cancelled: 'bg-[#ffece8] text-[#F53F3F]',
+  sent: 'bg-[#e8f3ff] text-[#2B5AED]',
+  received: 'bg-[#e8ffea] text-[#00B42A]',
+  paid: 'bg-[#e8ffea] text-[#00B42A]',
+  partial: 'bg-[#fff7e8] text-[#FF7D00]',
+  unpaid: 'bg-[#ffece8] text-[#F53F3F]',
+  overdue: 'bg-[#ffece8] text-[#F53F3F]',
+  active: 'bg-[#e8ffea] text-[#00B42A]',
+  inactive: 'bg-[#f2f3f5] text-[#86909C]',
+  terminated: 'bg-[#ffece8] text-[#F53F3F]',
 }
 
 const labels: Record<string, string> = {
@@ -24,7 +24,7 @@ const labels: Record<string, string> = {
 
 export default function Badge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-700'}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium ${colors[status] || 'bg-[#f2f3f5] text-[#86909C]'}`}>
       {labels[status] || status}
     </span>
   )

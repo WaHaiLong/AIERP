@@ -178,7 +178,7 @@ export const createPurchaseOrder = async (
   return ord as PurchaseOrder
 }
 
-export const updatePurchaseOrderStatus = async (id: number, status: PurchaseOrder['status']) => {
+export const updatePurchaseOrderStatus = async (id: number, status: string) => {
   const { error } = await supabase.from('purchase_orders').update({ status }).eq('id', id)
   if (error) throw error
 }
@@ -201,6 +201,7 @@ export const getInvoices = async (type?: string) => {
 
 export const createInvoice = async (d: Omit<Invoice, 'id' | 'invoice_number' | 'paid_amount' | 'status' | 'created_at'>) => {
   const { count } = await supabase.from('invoices').select('*', { count: 'exact', head: true })
+    .eq('invoice_type', d.invoice_type)
   const prefix = d.invoice_type === 'receivable' ? 'AR' : 'AP'
   const invoice_number = `${prefix}-${String((count ?? 0) + 1).padStart(6, '0')}`
 

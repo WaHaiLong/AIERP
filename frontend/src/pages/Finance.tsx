@@ -288,7 +288,7 @@ export default function Finance() {
             <tbody className="divide-y divide-gray-100">
               {filtered.map(inv => {
                 const remaining = inv.amount - inv.paid_amount
-                const canPay = inv.status !== 'paid' && inv.status !== 'cancelled'
+                const canPay = inv.status !== 'paid'
                 return (
                   <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 font-mono text-gray-700">{inv.invoice_number}</td>

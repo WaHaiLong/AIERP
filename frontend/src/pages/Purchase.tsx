@@ -231,7 +231,7 @@ export default function Purchase() {
     }
   }
 
-  const handleStatusChange = async (id: number, status: string) => {
+  const handleStatusChange = async (id: number, status: PurchaseOrder['status']) => {
     try {
       await updatePurchaseOrderStatus(id, status)
       await loadAll()
@@ -415,7 +415,7 @@ export default function Purchase() {
                           </button>
                           <select
                             value={o.status}
-                            onChange={e => handleStatusChange(o.id, e.target.value)}
+                            onChange={e => handleStatusChange(o.id, e.target.value as PurchaseOrder['status'])}
                             className="text-xs border border-gray-200 rounded px-1.5 py-1 text-gray-600 focus:ring-1 focus:ring-orange-400 outline-none bg-white"
                           >
                             <option value="draft">草稿</option>

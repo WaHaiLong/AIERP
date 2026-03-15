@@ -1,5 +1,5 @@
+import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
-import type { ReactNode } from 'react'
 
 interface ModalProps {
   open: boolean
@@ -17,9 +17,16 @@ const sizeClass = {
 }
 
 export default function Modal({ open, onClose, title, children, size = 'md' }: ModalProps) {
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [open, onClose])
+
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className={`relative bg-white rounded-xl shadow-xl w-full ${sizeClass[size]} max-h-[90vh] overflow-y-auto`}>
         <div className="flex items-center justify-between p-4 border-b">

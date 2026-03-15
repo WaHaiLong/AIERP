@@ -1,206 +1,534 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, CreditCard, DollarSign } from 'lucide-react'
-import type { Invoice } from '../types'
-import { getInvoices, createInvoice, deleteInvoice, createPayment } from '../lib/db'
+import { Plus, Trash2, CreditCard, Search, DollarSign } from 'lucide-react'
+import type { Invoice, Payment } from '../types'
+import {
+  getInvoices, createInvoice, deleteInvoice, createPayment,
+} from '../lib/db'
 import Modal from '../components/ui/Modal'
 import Badge from '../components/ui/Badge'
 
+const formatCurrency = (n: number) =>
+  `¥${n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+const today = () => new Date().toISOString().slice(0, 10)
+
+// ─── Invoice form ─────────────────────────────────────────────
+interface InvoiceForm {
+  party_name: string
+  invoice_date: string
+  due_date: string
+  amount: number
+  notes: string
+}
+
+const emptyInvoiceForm = (): InvoiceForm => ({
+  party_name: '',
+  invoice_date: today(),
+  due_date: '',
+  amount: 0,
+  notes: '',
+})
+
+// ─── Payment form ─────────────────────────────────────────────
+interface PaymentForm {
+  payment_date: string
+  amount: number
+  method: Payment['method']
+  reference: string
+  notes: string
+}
+
+const emptyPaymentForm = (remaining = 0): PaymentForm => ({
+  payment_date: today(),
+  amount: remaining,
+  method: 'bank_transfer',
+  reference: '',
+  notes: '',
+})
+
+type TabType = 'receivable' | 'payable'
+
 export default function Finance() {
-  const [tab, setTab] = useState<'receivable' | 'payable'>('receivable')
+  const [tab, setTab] = useState<TabType>('receivable')
+
+  // ── Data ──────────────────────────────────────────────────────
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
-  const [invModal, setInvModal] = useState(false)
-  const [payModal, setPayModal] = useState(false)
-  const [selectedInv, setSelectedInv] = useState<Invoice | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  // ── Invoice modal ─────────────────────────────────────────────
+  const [invoiceModal, setInvoiceModal] = useState(false)
+  const [invoiceForm, setInvoiceForm] = useState<InvoiceForm>(emptyInvoiceForm())
+
+  // ── Payment modal ─────────────────────────────────────────────
+  const [paymentModal, setPaymentModal] = useState(false)
+  const [payingInvoice, setPayingInvoice] = useState<Invoice | null>(null)
+  const [paymentForm, setPaymentForm] = useState<PaymentForm>(emptyPaymentForm())
+
+  // ── Search ────────────────────────────────────────────────────
+  const [search, setSearch] = useState('')
+
+  // ── Saving ────────────────────────────────────────────────────
   const [saving, setSaving] = useState(false)
 
-  const emptyInv = { party_name: '', invoice_date: new Date().toISOString().slice(0, 10), due_date: '', amount: 0, notes: '' }
-  const [invForm, setInvForm] = useState(emptyInv)
-  const [payForm, setPayForm] = useState({ payment_date: new Date().toISOString().slice(0, 10), amount: 0, method: 'bank_transfer', reference: '', notes: '' })
-
-  const load = async () => {
+  // ─── Load data ─────────────────────────────────────────────────
+  const loadInvoices = async () => {
     setLoading(true)
     try {
-      setInvoices(await getInvoices(tab))
-    } catch (e: any) { alert('加载失败: ' + e.message) } finally { setLoading(false) }
+      const data = await getInvoices()
+      setInvoices(data)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : '加载数据失败')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  useEffect(() => { load() }, [tab])
+  useEffect(() => { loadInvoices() }, [])
 
-  const totalAmount = invoices.reduce((s, i) => s + i.amount, 0)
-  const paidAmount = invoices.reduce((s, i) => s + i.paid_amount, 0)
-  const unpaidAmount = totalAmount - paidAmount
+  // ─── Derived data ──────────────────────────────────────────────
+  const tabInvoices = invoices.filter(inv => inv.invoice_type === tab)
 
-  const handleCreateInv = async () => {
-    setSaving(true)
-    try {
-      await createInvoice({ ...invForm, invoice_type: tab, due_date: invForm.due_date || undefined, amount: Number(invForm.amount) } as any)
-      setInvModal(false); setInvForm(emptyInv); load()
-    } catch (e: any) { alert('创建失败: ' + e.message) } finally { setSaving(false) }
+  const filtered = tabInvoices.filter(inv =>
+    inv.invoice_number.toLowerCase().includes(search.toLowerCase()) ||
+    inv.party_name.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const totalAmount = tabInvoices.reduce((s, inv) => s + inv.amount, 0)
+  const totalPaid = tabInvoices.reduce((s, inv) => s + inv.paid_amount, 0)
+  const totalPending = totalAmount - totalPaid
+
+  // ─── Invoice CRUD ──────────────────────────────────────────────
+  const openNewInvoice = () => {
+    setInvoiceForm(emptyInvoiceForm())
+    setError(null)
+    setInvoiceModal(true)
   }
 
-  const handlePay = async () => {
-    if (!selectedInv) return
+  const handleSaveInvoice = async () => {
+    if (!invoiceForm.party_name.trim()) { setError('往来方名称为必填项'); return }
+    if (invoiceForm.amount <= 0) { setError('金额必须大于 0'); return }
     setSaving(true)
+    setError(null)
     try {
-      await createPayment({ invoice_id: selectedInv.id, ...payForm, amount: Number(payForm.amount) } as any)
-      setPayModal(false); load()
-    } catch (e: any) { alert('登记失败: ' + e.message) } finally { setSaving(false) }
+      await createInvoice({
+        invoice_type: tab,
+        party_name: invoiceForm.party_name,
+        invoice_date: invoiceForm.invoice_date,
+        due_date: invoiceForm.due_date || undefined,
+        amount: invoiceForm.amount,
+        notes: invoiceForm.notes || undefined,
+      })
+      setInvoiceModal(false)
+      await loadInvoices()
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : '保存失败')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDeleteInvoice = async (id: number) => {
+    if (!confirm('确定删除此账单？')) return
+    try {
+      await deleteInvoice(id)
+      await loadInvoices()
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : '删除失败')
+    }
+  }
+
+  // ─── Payment ───────────────────────────────────────────────────
+  const openPayment = (inv: Invoice) => {
+    setPayingInvoice(inv)
+    setPaymentForm(emptyPaymentForm(inv.amount - inv.paid_amount))
+    setError(null)
+    setPaymentModal(true)
+  }
+
+  const handleSavePayment = async () => {
+    if (!payingInvoice) return
+    if (paymentForm.amount <= 0) { setError('付款金额必须大于 0'); return }
+    setSaving(true)
+    setError(null)
+    try {
+      await createPayment({
+        invoice_id: payingInvoice.id,
+        payment_date: paymentForm.payment_date,
+        amount: paymentForm.amount,
+        method: paymentForm.method,
+        reference: paymentForm.reference || undefined,
+        notes: paymentForm.notes || undefined,
+      })
+      setPaymentModal(false)
+      setPayingInvoice(null)
+      await loadInvoices()
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : '付款登记失败')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const isReceivable = tab === 'receivable'
-  const label = isReceivable ? { type: '应收账款', total: '应收总额', paid: '已收金额', unpaid: '待收金额', new: '新建应收', pay: '登记收款' }
-    : { type: '应付账款', total: '应付总额', paid: '已付金额', unpaid: '待付金额', new: '新建应付', pay: '登记付款' }
+  const tabLabel = isReceivable ? '应收账款' : '应付账款'
+  const collectedLabel = isReceivable ? '已收' : '已付'
+  const pendingLabel = isReceivable ? '待收' : '待付'
+  const payButtonLabel = isReceivable ? '登记收款' : '登记付款'
+  const payModalTitle = isReceivable ? '登记收款' : '登记付款'
 
+  // ─── Render ────────────────────────────────────────────────────
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">财务管理</h1>
-        <p className="text-sm text-gray-500 mt-1">管理应收账款和应付账款</p>
+    <div className="space-y-6">
+      {/* Page header */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+          <CreditCard className="text-emerald-600" size={20} />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">财务管理</h1>
+          <p className="text-sm text-gray-500">管理应收账款与应付账款</p>
+        </div>
       </div>
 
-      <div className="flex gap-2 mb-6 border-b border-gray-200">
-        {[{ key: 'receivable', label: '应收账款' }, { key: 'payable', label: '应付账款' }].map(t => (
-          <button key={t.key} onClick={() => setTab(t.key as any)}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === t.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
-            <CreditCard size={15} />{t.label}
-          </button>
-        ))}
+      {/* Error banner */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 ml-4">✕</button>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="flex gap-6">
+          {(['receivable', 'payable'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => { setTab(t); setSearch('') }}
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+                tab === t
+                  ? 'border-emerald-500 text-emerald-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {t === 'receivable' ? '应收账款' : '应付账款'}
+            </button>
+          ))}
+        </nav>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        {[
-          { title: label.total, value: totalAmount, color: 'bg-blue-50 text-blue-700' },
-          { title: label.paid, value: paidAmount, color: 'bg-green-50 text-green-700' },
-          { title: label.unpaid, value: unpaidAmount, color: 'bg-red-50 text-red-700' },
-        ].map(c => (
-          <div key={c.title} className={`rounded-xl p-4 ${c.color}`}>
-            <p className="text-sm font-medium opacity-80">{c.title}</p>
-            <p className="text-2xl font-bold mt-1">¥{c.value.toFixed(2)}</p>
+      {/* Summary cards */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+            <DollarSign className="text-blue-600" size={18} />
           </div>
-        ))}
+          <div>
+            <p className="text-xs text-gray-500 font-medium">总金额</p>
+            <p className="text-lg font-bold text-gray-900 mt-0.5">{formatCurrency(totalAmount)}</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
+            <CreditCard className="text-green-600" size={18} />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 font-medium">{collectedLabel}</p>
+            <p className="text-lg font-bold text-green-700 mt-0.5">{formatCurrency(totalPaid)}</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+            <DollarSign className="text-amber-600" size={18} />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 font-medium">{pendingLabel}</p>
+            <p className="text-lg font-bold text-amber-700 mt-0.5">{formatCurrency(totalPending)}</p>
+          </div>
+        </div>
       </div>
 
-      <div className="flex justify-end mb-4">
-        <button onClick={() => { setInvForm(emptyInv); setInvModal(true) }}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
-          <Plus size={16} />{label.new}
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <input
+            type="text"
+            placeholder={`搜索${tabLabel}...`}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+          />
+        </div>
+        <button
+          onClick={openNewInvoice}
+          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+        >
+          <Plus size={16} />
+          新建账单
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
+      {/* Invoice table */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="p-8 text-center text-gray-400 text-sm">加载中...</div>
+        ) : filtered.length === 0 ? (
+          <div className="p-8 text-center text-gray-400 text-sm">暂无{tabLabel}数据</div>
+        ) : (
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>{['单据号', '往来方', '单据日期', '到期日', '金额', '已付', '状态', '操作'].map(h =>
-                <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{h}</th>
-              )}</tr>
+              <tr>
+                {['单据号', '往来方', '单据日期', '到期日', '金额', '已付金额', '状态', '操作'].map(h => (
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                ))}
+              </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {loading ? <tr><td colSpan={8} className="text-center py-10 text-gray-400">加载中...</td></tr>
-              : invoices.length === 0 ? <tr><td colSpan={8} className="text-center py-10 text-gray-400">暂无数据</td></tr>
-              : invoices.map(inv => (
-                <tr key={inv.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-mono text-xs">{inv.invoice_number}</td>
-                  <td className="px-4 py-3 font-medium">{inv.party_name}</td>
-                  <td className="px-4 py-3 text-gray-500">{inv.invoice_date}</td>
-                  <td className="px-4 py-3 text-gray-500">{inv.due_date || '-'}</td>
-                  <td className="px-4 py-3 font-medium">¥{inv.amount.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-green-600">¥{inv.paid_amount.toFixed(2)}</td>
-                  <td className="px-4 py-3"><Badge status={inv.status} /></td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      {inv.status !== 'paid' && (
-                        <button onClick={() => { setSelectedInv(inv); setPayForm({ payment_date: new Date().toISOString().slice(0,10), amount: inv.amount - inv.paid_amount, method: 'bank_transfer', reference: '', notes: '' }); setPayModal(true) }}
-                          className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 border border-green-200 rounded px-2 py-1">
-                          <DollarSign size={12} />{label.pay}
+              {filtered.map(inv => {
+                const remaining = inv.amount - inv.paid_amount
+                const canPay = inv.status !== 'paid'
+                return (
+                  <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 font-mono text-gray-700">{inv.invoice_number}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900">{inv.party_name}</td>
+                    <td className="px-4 py-3 text-gray-500">{inv.invoice_date}</td>
+                    <td className="px-4 py-3 text-gray-500">{inv.due_date ?? '—'}</td>
+                    <td className="px-4 py-3 font-semibold text-gray-900">{formatCurrency(inv.amount)}</td>
+                    <td className="px-4 py-3">
+                      <div>
+                        <span className="font-medium text-gray-900">{formatCurrency(inv.paid_amount)}</span>
+                        {remaining > 0 && (
+                          <span className="block text-xs text-amber-600 mt-0.5">余 {formatCurrency(remaining)}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge status={inv.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {canPay && (
+                          <button
+                            onClick={() => openPayment(inv)}
+                            className="flex items-center gap-1 text-xs text-emerald-600 border border-emerald-300 hover:bg-emerald-50 px-2 py-1 rounded transition-colors font-medium"
+                          >
+                            <CreditCard size={11} />
+                            {payButtonLabel}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteInvoice(inv.id)}
+                          className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
+                          title="删除"
+                        >
+                          <Trash2 size={14} />
                         </button>
-                      )}
-                      <button onClick={async () => { if (confirm('确认删除？')) { await deleteInvoice(inv.id); load() } }}
-                        className="text-red-500 hover:text-red-700"><Trash2 size={15} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
-        </div>
+        )}
       </div>
 
-      {/* Invoice Modal */}
-      <Modal open={invModal} onClose={() => setInvModal(false)} title={label.new}>
+      {/* ── New Invoice Modal ────────────────────────────────── */}
+      <Modal
+        open={invoiceModal}
+        onClose={() => { setInvoiceModal(false); setError(null) }}
+        title={`新建${tabLabel}账单`}
+        size="md"
+      >
         <div className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2 rounded-lg">{error}</div>
+          )}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">往来方名称*</label>
-            <input value={invForm.party_name} onChange={e => setInvForm(p => ({ ...p, party_name: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              往来方 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={invoiceForm.party_name}
+              onChange={e => setInvoiceForm(f => ({ ...f, party_name: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+              placeholder={isReceivable ? '客户名称' : '供应商名称'}
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">单据日期</label>
-              <input type="date" value={invForm.invoice_date} onChange={e => setInvForm(p => ({ ...p, invoice_date: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label className="block text-xs font-medium text-gray-700 mb-1">单据日期</label>
+              <input
+                type="date"
+                value={invoiceForm.invoice_date}
+                onChange={e => setInvoiceForm(f => ({ ...f, invoice_date: e.target.value }))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">到期日</label>
-              <input type="date" value={invForm.due_date} onChange={e => setInvForm(p => ({ ...p, due_date: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label className="block text-xs font-medium text-gray-700 mb-1">到期日</label>
+              <input
+                type="date"
+                value={invoiceForm.due_date}
+                onChange={e => setInvoiceForm(f => ({ ...f, due_date: e.target.value }))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+              />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">金额*</label>
-            <input type="number" min="0" value={invForm.amount} onChange={e => setInvForm(p => ({ ...p, amount: parseFloat(e.target.value) || 0 }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              金额 <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">¥</span>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                value={invoiceForm.amount === 0 ? '' : invoiceForm.amount}
+                onChange={e => setInvoiceForm(f => ({ ...f, amount: Number(e.target.value) }))}
+                className="w-full border border-gray-300 rounded-lg pl-7 pr-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                placeholder="0.00"
+              />
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">备注</label>
-            <textarea value={invForm.notes} onChange={e => setInvForm(p => ({ ...p, notes: e.target.value }))} rows={2}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <label className="block text-xs font-medium text-gray-700 mb-1">备注</label>
+            <textarea
+              rows={2}
+              value={invoiceForm.notes}
+              onChange={e => setInvoiceForm(f => ({ ...f, notes: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none resize-none"
+              placeholder="选填备注..."
+            />
           </div>
-        </div>
-        <div className="flex justify-end gap-3 mt-6">
-          <button onClick={() => setInvModal(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">取消</button>
-          <button onClick={handleCreateInv} disabled={saving} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
-            {saving ? '创建中...' : '创建'}
-          </button>
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              onClick={() => { setInvoiceModal(false); setError(null) }}
+              className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              取消
+            </button>
+            <button
+              onClick={handleSaveInvoice}
+              disabled={saving}
+              className="px-4 py-2 text-sm text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors"
+            >
+              {saving ? '保存中...' : '创建账单'}
+            </button>
+          </div>
         </div>
       </Modal>
 
-      {/* Payment Modal */}
-      <Modal open={payModal} onClose={() => setPayModal(false)} title={`${label.pay}: ${selectedInv?.invoice_number}`}>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">付款日期</label>
-            <input type="date" value={payForm.payment_date} onChange={e => setPayForm(p => ({ ...p, payment_date: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      {/* ── Payment Modal ────────────────────────────────────── */}
+      <Modal
+        open={paymentModal}
+        onClose={() => { setPaymentModal(false); setPayingInvoice(null); setError(null) }}
+        title={payingInvoice ? `${payModalTitle} — ${payingInvoice.invoice_number}` : payModalTitle}
+        size="sm"
+      >
+        {payingInvoice && (
+          <div className="space-y-4">
+            {/* Invoice summary */}
+            <div className="bg-gray-50 rounded-lg px-4 py-3 text-sm space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-gray-500">往来方</span>
+                <span className="font-medium text-gray-900">{payingInvoice.party_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">账单金额</span>
+                <span className="font-medium text-gray-900">{formatCurrency(payingInvoice.amount)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">{pendingLabel}金额</span>
+                <span className="font-semibold text-amber-600">
+                  {formatCurrency(payingInvoice.amount - payingInvoice.paid_amount)}
+                </span>
+              </div>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2 rounded-lg">{error}</div>
+            )}
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">付款日期</label>
+              <input
+                type="date"
+                value={paymentForm.payment_date}
+                onChange={e => setPaymentForm(f => ({ ...f, payment_date: e.target.value }))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                付款金额 <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">¥</span>
+                <input
+                  type="number"
+                  min={0.01}
+                  step={0.01}
+                  value={paymentForm.amount === 0 ? '' : paymentForm.amount}
+                  onChange={e => setPaymentForm(f => ({ ...f, amount: Number(e.target.value) }))}
+                  className="w-full border border-gray-300 rounded-lg pl-7 pr-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">付款方式</label>
+              <select
+                value={paymentForm.method}
+                onChange={e => setPaymentForm(f => ({ ...f, method: e.target.value as Payment['method'] }))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white"
+              >
+                <option value="cash">现金</option>
+                <option value="bank_transfer">银行转账</option>
+                <option value="check">支票</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">参考号</label>
+              <input
+                type="text"
+                value={paymentForm.reference}
+                onChange={e => setPaymentForm(f => ({ ...f, reference: e.target.value }))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                placeholder="转账流水号等（选填）"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">备注</label>
+              <textarea
+                rows={2}
+                value={paymentForm.notes}
+                onChange={e => setPaymentForm(f => ({ ...f, notes: e.target.value }))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none resize-none"
+                placeholder="选填备注..."
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => { setPaymentModal(false); setPayingInvoice(null); setError(null) }}
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleSavePayment}
+                disabled={saving}
+                className="px-4 py-2 text-sm text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors"
+              >
+                {saving ? '保存中...' : '确认登记'}
+              </button>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">金额*</label>
-            <input type="number" min="0" value={payForm.amount} onChange={e => setPayForm(p => ({ ...p, amount: parseFloat(e.target.value) || 0 }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">付款方式</label>
-            <select value={payForm.method} onChange={e => setPayForm(p => ({ ...p, method: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="cash">现金</option>
-              <option value="bank_transfer">银行转账</option>
-              <option value="check">支票</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">参考单号</label>
-            <input value={payForm.reference} onChange={e => setPayForm(p => ({ ...p, reference: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-        </div>
-        <div className="flex justify-end gap-3 mt-6">
-          <button onClick={() => setPayModal(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">取消</button>
-          <button onClick={handlePay} disabled={saving} className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50">
-            {saving ? '登记中...' : '确认登记'}
-          </button>
-        </div>
+        )}
       </Modal>
     </div>
   )

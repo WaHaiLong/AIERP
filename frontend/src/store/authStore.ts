@@ -24,7 +24,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   signIn: async (email, password) => {
     // Try demo login first
     if ((email === 'admin@erp.com' || email === 'demo@example.com') && password === 'demo123456') {
-      localStorage.setItem('erp_demo_user', JSON.stringify(DEMO_USER))
+      localStorage.setItem('erp_demo_user', JSON.stringify({
+        ...DEMO_USER,
+        exp: Date.now() + 8 * 3600_000,
+      }))
       set({ user: DEMO_USER })
       return
     }
@@ -45,8 +48,23 @@ export const useAuthStore = create<AuthState>((set) => ({
     // Check local demo user
     const stored = localStorage.getItem('erp_demo_user')
     if (stored) {
-      set({ user: JSON.parse(stored), loading: false })
-      return
+      try {
+        const parsed = JSON.parse(stored)
+        // 校验过期时间和必要字段
+        if (
+          parsed &&
+          typeof parsed.id === 'string' &&
+          typeof parsed.email === 'string' &&
+          parsed.exp &&
+          Date.now() < parsed.exp
+        ) {
+          set({ user: parsed as User, loading: false })
+          return
+        }
+      } catch {
+        // parse 失败，清除无效数据
+      }
+      localStorage.removeItem('erp_demo_user')
     }
     // Check Supabase session
     const { data } = await supabase.auth.getSession()
